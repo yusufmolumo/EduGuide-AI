@@ -20,6 +20,34 @@ EduGuide AI is a multilingual learning and guidance assistant built on N‑ATLaS
 
 ---
 
+## Solution Overview
+EduGuide AI is a multilingual learning and guidance assistant purpose‑built for Nigeria and Africa. It helps learners understand complex topics with clear, culturally relevant explanations in English, Hausa, Yoruba, and Igbo. The app is fully self‑hosted: it downloads the N‑ATLaS checkpoint from Hugging Face and serves inference locally on GPU (Kaggle/Colab/local). The UX focuses on speed and clarity (Topic Presets, Response Level control, Fast Mode) so users get helpful answers quickly on modest hardware.
+
+Key outcomes:
+- Local, privacy‑friendly inference with zero external API dependency.
+- Language‑aware, culturally grounded explanations.
+- Fast responses on a free T4 GPU using 4‑bit quantization, prompt trimming, and caching.
+
+## Technical Details
+- Inference stack: PyTorch + Transformers with `AutoModelForCausalLM` and `AutoTokenizer` (trust_remote_code enabled).
+- Quantization: bitsandbytes 4‑bit (nf4 + optional double‑quant) with bfloat16 compute. Graceful fallback to 8‑bit or full precision.
+- Memory/latency controls:
+  - `device_map="auto"` for efficient placement
+  - Prompt trimming to `MAX_INPUT_TOKENS`
+  - Response cache keyed by recent turns and generation params
+- Generation:
+  - Fast Mode reduces temperature and max tokens; greedy decoding path supported
+  - Configurable sliders for temperature/top‑p/max tokens
+- Runtime accelerations:
+  - CUDA TF32 and SDPA attention kernels when available
+- Tokenizer robustness:
+  - Fast tokenizer first; fallback to slow (sentencepiece) with safe re‑download
+  - Output cleaner strips chat‑template markers (`<|end_header_id|>`, etc.)
+- Serving:
+  - Gradio front‑end + FastAPI backend in one process
+  - `/api/generate` endpoint for programmatic access
+  - Port conflict retry and Kaggle‑friendly public link behavior
+
 ## Quick Start
 
 You can run EduGuide AI on Kaggle (recommended) or Google Colab (free T4 GPU). Both flows self‑host the N‑ATLaS model.
@@ -142,6 +170,56 @@ The UI app also exposes a FastAPI endpoint via Gradio’s server.
 
 ---
 
+## Technical Architecture
+
+If your markdown renderer supports Mermaid, the diagram below will render automatically. An ASCII layout is also provided.
+
+```mermaid
+flowchart LR
+  U[User Browser] -->|HTTPS| G[Gradio UI]
+  G -->|/api/generate| A[FastAPI Endpoint]
+  G -->|Submit Prompt| C[Controller (UI callbacks)]
+  A -->|Build Messages| M[N‑ATLaS Inference Layer]
+  C -->|Build Messages| M
+  subgraph Inference Process
+    M -->|Tokenizer.apply_chat_template| T[Tokenizer]
+    T -->|PT Tensors| L[LLM (N‑ATLaS, 4‑bit bnb)]
+    L -->|Generate| P[Post‑process & Clean]
+  end
+  P -->|Reply| G
+  P -->|Reply+History| A
+  M -->|Cache Lookup| K[Response Cache]
+  K --> M
+```
+
+ASCII layout (fallback):
+
+```
+ [User Browser]
+       |
+     HTTPS
+       v
+   [Gradio UI]  <---->  [FastAPI /api/generate]
+       |                        |
+  (callbacks)              build messages
+       v                        v
+  [Controller] ----------> [Inference Layer]
+                                 |
+                     [Tokenizer -> N‑ATLaS (4‑bit bnb)]
+                                 |
+                     [Post‑process & Clean Output]
+                                 |
+                 (reply to UI)  (reply+history to API)
+                                 |
+                        [Response Cache]
+```
+
+Key notes:
+- N‑ATLaS runs locally with 4‑bit quantization (bitsandbytes) for latency and memory efficiency.
+- Prompt trimming and caching reduce context length and repeat work.
+- UI and API share the same inference core to avoid duplication.
+- Kaggle uses a public link; local/Colab can use inline or shared URLs.
+
 ## Troubleshooting
 - "127.0.0.1 refused to connect" (Kaggle): Kaggle cannot access localhost. Always use the public link.
 - Tokenizer JSON error: Restart the runtime and re‑run cells; the app already falls back to a slow tokenizer.
@@ -177,6 +255,19 @@ Below are screenshots demonstrating the app.
 - **Chat Export Confirmation**
 
   <img alt="EduGuide AI Chat Export" src="Pictures/EduGuide AI Chat Export.png" width="900" />
+
+---
+
+## Performance Notes
+
+- 4‑bit confirmation: Look for the log line `Attn q_proj module: Linear4bit` after model load.
+- T4 GPU results (typical short prompts): Fast Mode (temperature≈0.2, max_new_tokens≈64–128) returns in a few seconds depending on prompt length.
+- Latency controls:
+  - Keep prompts concise; app trims to `MAX_INPUT_TOKENS` by default.
+  - Use Fast Mode for greedy/short outputs; increase tokens only when needed.
+- If bitsandbytes falls back (no GPU bnb), the app still runs at reduced speed.
+
+You can attach screenshots of logs showing the `Linear4bit` line and rough timing to strengthen the submission.
 
 ---
 
