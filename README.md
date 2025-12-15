@@ -172,8 +172,6 @@ The UI app also exposes a FastAPI endpoint via Gradio’s server.
 
 ## Technical Architecture
 
-If your markdown renderer supports Mermaid, the diagram below will render automatically. An ASCII layout is also provided.
-
 ```mermaid
 flowchart LR
   U[User Browser] -->|HTTPS| G[Gradio UI]
@@ -266,36 +264,6 @@ Below are screenshots demonstrating the app.
   - Keep prompts concise; app trims to `MAX_INPUT_TOKENS` by default.
   - Use Fast Mode for greedy/short outputs; increase tokens only when needed.
 - If bitsandbytes falls back (no GPU bnb), the app still runs at reduced speed.
-
-You can attach screenshots of logs showing the `Linear4bit` line and rough timing to strengthen the submission.
-
----
-
-## Submission Checklist (Awarri Challenge)
-- [ ] eduguide_ai.py (final, working single‑file app)
-- [ ] README.md (this document)
-- [ ] Demo video (60–90s):
-  - Introduce EduGuide AI and show UI
-  - English and one local language turn
-  - Topic Preset + Send
-  - Change Response Level and Fast Mode
-  - Export history
-  - Mention self‑hosted inference and 4‑bit quantization
-- [ ] 3–5 screenshots of UI
-- [ ] Performance notes: logs/screens confirming 4‑bit and sample latency
-- [ ] Attribution and license statement
-- [ ] Optional: one‑pager (Problem, Solution, Users/Market, Tech approach, Roadmap)
-
----
-
-## Demo Script (Optional)
-1. “Welcome to EduGuide AI—multilingual learning powered by N‑ATLaS.”
-2. “It supports English, Hausa, Yoruba, and Igbo.” Type a short question.
-3. Toggle Fast Mode and show quick responses.
-4. Select a Topic Preset, click Load Preset, then Send.
-5. Change Response Level from Beginner to Advanced and re‑ask.
-6. Export chat history.
-7. Note: “All inference is self‑hosted. We use 4‑bit quantization for speed on T4.”
 
 ---
 
