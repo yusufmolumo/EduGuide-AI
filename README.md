@@ -183,7 +183,7 @@ flowchart LR
   C -->|Build Messages| M
   subgraph Inference Process
     M -->|Tokenizer.apply_chat_template| T[Tokenizer]
-    T -->|PT Tensors| L[LLM (N‑ATLaS, 4‑bit bnb)]
+    T -->|PT Tensors| L[LLM N‑ATLaS, 4‑bit bnb]
     L -->|Generate| P[Post‑process & Clean]
   end
   P -->|Reply| G
