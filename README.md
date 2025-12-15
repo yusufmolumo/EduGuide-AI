@@ -178,7 +178,7 @@ If your markdown renderer supports Mermaid, the diagram below will render automa
 flowchart LR
   U[User Browser] -->|HTTPS| G[Gradio UI]
   G -->|/api/generate| A[FastAPI Endpoint]
-  G -->|Submit Prompt| C[Controller (UI callbacks)]
+  G -->|Submit Prompt| C[Controller UI callbacks]
   A -->|Build Messages| M[N‑ATLaS Inference Layer]
   C -->|Build Messages| M
   subgraph Inference Process
